@@ -8,9 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
+
 import android.graphics.Matrix;
-import android.graphics.Rect;
+
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -26,14 +26,13 @@ import com.theartofdev.edmodo.cropper.CropImageView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
-import java.util.Date;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -125,8 +124,6 @@ public class EditActivity extends AppCompatActivity {
                 }
             });
         });
-
-
     }
 
     public void undo(View view) {
@@ -151,7 +148,6 @@ public class EditActivity extends AppCompatActivity {
                 bmp = undo.get(lastPosition);
                 undo.remove(lastPosition);
             }
-
         }
     }
 
@@ -170,16 +166,15 @@ public class EditActivity extends AppCompatActivity {
         try{
             outputStream = new FileOutputStream(file);
             outputStream.write(byteArray);
+            Toast.makeText(EditActivity.this, "Saved "+file, Toast.LENGTH_SHORT).show();
         }catch (Exception e){
             e.printStackTrace();
         }
-
         finally {
             if(outputStream != null)
                 outputStream.close();
         }
         addImageToGallery(file.getAbsolutePath(),EditActivity.this);
-
     }
 
     public void bitmapToByteArray(Bitmap bitmap){
@@ -189,14 +184,10 @@ public class EditActivity extends AppCompatActivity {
     }
 
     public static void addImageToGallery(final String filePath, final Context context) {
-
         ContentValues values = new ContentValues();
-
         values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
         values.put(MediaStore.MediaColumns.DATA, filePath);
-
         context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
     }
-
 }

@@ -127,7 +127,6 @@ public class TakePicture extends AppCompatActivity {
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION,ORIENTATIONS.get(rotation));
 
-            // file = new File(Environment.getExternalStorageDirectory()+"/"+UUID.randomUUID().toString()+".jpg");
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader imageReader) {
@@ -140,17 +139,8 @@ public class TakePicture extends AppCompatActivity {
                         Intent editIntent=new Intent(getApplicationContext(),EditActivity.class);
                         editIntent.putExtra(EditConstant,bytes);
                         startActivity(editIntent);
-                        // save(bytes);
 
                     }
-//                    catch (FileNotFoundException e)
-//                    {
-//                        e.printStackTrace();
-//                    }
-//                    catch (IOException e)
-//                    {
-//                        e.printStackTrace();
-//                    }
                     finally {
                         {
                             if(image != null)
@@ -158,16 +148,6 @@ public class TakePicture extends AppCompatActivity {
                         }
                     }
                 }
-//                private void save(byte[] bytes) throws IOException {
-//                    OutputStream outputStream = null;
-//                    try{
-//                        outputStream = new FileOutputStream(file);
-//                        outputStream.write(bytes);
-//                    }finally {
-//                        if(outputStream != null)
-//                            outputStream.close();
-//                    }
-//                }
             };
 
             reader.setOnImageAvailableListener(readerListener,mBackgroundHandler);
@@ -175,7 +155,6 @@ public class TakePicture extends AppCompatActivity {
                 @Override
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
-                    //Toast.makeText(TakePicture.this, "Saved "+file, Toast.LENGTH_SHORT).show();
                     createCameraPreview();
                 }
             };
@@ -248,7 +227,6 @@ public class TakePicture extends AppCompatActivity {
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             assert map != null;
             imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
-            //Check realtime permission if run higher API 23
             if(ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
             {
                 ActivityCompat.requestPermissions(this,new String[]{
