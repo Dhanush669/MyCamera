@@ -311,12 +311,12 @@ public class TakePicture extends AppCompatActivity {
     protected void onPause() {
         stopBackgroundThread();
         super.onPause();
+        cameraDevice.close();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
     }
 
     private void stopBackgroundThread() {
