@@ -28,6 +28,7 @@ import static com.devgd.mycamera.TakePicture.EditConstant;
 public class MainActivity extends AppCompatActivity {
 
     static final int Permission_code=1;
+    static final int Permission_code_for_write=101;
     static final int Pick_Image=11;
     Uri uri;
     static ImageViewModel imageViewModel;
@@ -38,22 +39,32 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Permission_code_for_write);
+        }
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         if(imageViewModel==null) {
             imageViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.
                     getInstance(this.getApplication())).get(ImageViewModel.class);
         }
+
         finalEditedImage=findViewById(R.id.processedImage);
         finalBitmap=imageViewModel.getFinalEditedBitmap();
+
         if(finalBitmap!=null){
             finalEditedImage.setImageBitmap(finalBitmap);
         }
     }
 
     public void takePicture(View view) {
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)== PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)== PackageManager.PERMISSION_GRANTED ){
-            Granted();
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)== PackageManager.PERMISSION_GRANTED ){
+            if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)== PackageManager.PERMISSION_GRANTED){
+                Granted();
+            }
+            else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Permission_code_for_write);
+            }
+
         }
         else{
             RequestPer();
@@ -61,12 +72,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void openGallery(View view) {
-        chooseImage();
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)== PackageManager.PERMISSION_GRANTED) {
+            chooseImage();
+        }
+        else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, Permission_code_for_write);
+        }
     }
 
     private void RequestPer() {
         ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.CAMERA},Permission_code);
-        ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},Permission_code);
     }
 
     private void Granted() {
