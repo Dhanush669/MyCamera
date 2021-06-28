@@ -83,6 +83,7 @@ public class EditActivity extends AppCompatActivity {
     }
 
     public void crop(View view) {
+        Toast.makeText(this, "Crop", Toast.LENGTH_SHORT).show();
         cropImage(MainActivity.imageViewModel.getImageUri(bmp));
         undo.add(bmp);
         MainActivity.imageViewModel.addUndo(undo);
@@ -101,6 +102,7 @@ public class EditActivity extends AppCompatActivity {
    }
 
     public void rotate(View view) {
+        Toast.makeText(this, "Rotate", Toast.LENGTH_SHORT).show();
         rotateImage();
     }
     public void rotateImage(){
@@ -124,6 +126,7 @@ public class EditActivity extends AppCompatActivity {
     }
 
     public void undo(View view) {
+        Toast.makeText(this, "Undo", Toast.LENGTH_SHORT).show();
         performUndo();
     }
 
@@ -137,6 +140,7 @@ public class EditActivity extends AppCompatActivity {
             }
             captureImage.setImageBitmap(undo.get(lastPosition));
             bmp = undo.get(lastPosition);
+            MainActivity.imageViewModel.UpdatedBitmap(bmp);
             undo.remove(lastPosition);
             MainActivity.imageViewModel.addUndo(undo);
         }
