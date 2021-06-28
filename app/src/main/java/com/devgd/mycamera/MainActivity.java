@@ -6,13 +6,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -26,12 +30,24 @@ public class MainActivity extends AppCompatActivity {
     static final int Permission_code=1;
     static final int Pick_Image=11;
     Uri uri;
+    static ImageViewModel imageViewModel;
+    ImageView finalEditedImage;
+    Bitmap finalBitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        if(imageViewModel==null) {
+            imageViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.
+                    getInstance(this.getApplication())).get(ImageViewModel.class);
+        }
+        finalEditedImage=findViewById(R.id.processedImage);
+        finalBitmap=imageViewModel.getFinalEditedBitmap();
+        if(finalBitmap!=null){
+            finalEditedImage.setImageBitmap(finalBitmap);
+        }
     }
 
     public void takePicture(View view) {
@@ -83,9 +99,9 @@ public class MainActivity extends AppCompatActivity {
             InputStream iStream = null;
             try {
                 iStream = getContentResolver().openInputStream(uri);
-                byte[] byteArray = getBytes(iStream);
+                imageViewModel.setGalleryImage(iStream);
+                byte[] byteArray = imageViewModel.getGalleryImage();
                 Intent editIntent=new Intent(getApplicationContext(),EditActivity.class);
-                editIntent.putExtra(EditConstant,byteArray);
                 startActivity(editIntent);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -94,17 +110,5 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
-    }
-
-    public byte[] getBytes(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
-        int bufferSize = 1024;
-        byte[] buffer = new byte[bufferSize];
-
-        int len = 0;
-        while ((len = inputStream.read(buffer)) != -1) {
-            byteBuffer.write(buffer, 0, len);
-        }
-        return byteBuffer.toByteArray();
     }
 }

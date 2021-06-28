@@ -5,12 +5,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="#E3E3E3"
     tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:text="Processed Image"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        >
+    </TextView>
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="350dp"
-        android:layout_margin="20dp"
+        android:layout_margin="10dp"
         android:src="@mipmap/ic_launcher"
         android:id="@+id/processedImage"
         >
@@ -23,6 +35,7 @@
         android:onClick="takePicture"
         android:layout_gravity="center"
         android:layout_margin="10dp"
+        android:backgroundTint="#A042B1"
         >
     </Button>
 
@@ -33,6 +46,7 @@
         android:onClick="openGallery"
         android:layout_gravity="center"
         android:layout_margin="10dp"
+        android:backgroundTint="#A042B1"
         >
     </Button>
 

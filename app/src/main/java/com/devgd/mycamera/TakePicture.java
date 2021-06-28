@@ -136,8 +136,8 @@ public class TakePicture extends AppCompatActivity {
                         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                         byte[] bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
+                        MainActivity.imageViewModel.setCameraCapturedImage(bytes);
                         Intent editIntent=new Intent(getApplicationContext(),EditActivity.class);
-                        editIntent.putExtra(EditConstant,bytes);
                         startActivity(editIntent);
 
                     }

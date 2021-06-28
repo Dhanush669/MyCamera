@@ -2,6 +2,7 @@ package com.devgd.mycamera;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -48,17 +49,22 @@ public class EditActivity extends AppCompatActivity {
     Bitmap bmp;
     ExecutorService executorService = Executors.newFixedThreadPool(1);
     List<Bitmap> undo;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
         captureImage=findViewById(R.id.capturedImage);
-        Intent editIntent=getIntent();
-        byteArray = editIntent.getByteArrayExtra(EditConstant);
-        bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+
+        byteArray = MainActivity.imageViewModel.getGalleryImage();
+        bmp = MainActivity.imageViewModel.getImageBitmap(byteArray);
         captureImage.setImageBitmap(bmp);
-        undo=new ArrayList<>();
-        undo.add(bmp);
+        if(MainActivity.imageViewModel.getUndoList()==null) {
+            undo=new ArrayList<>();
+        }
+        else{
+            undo=MainActivity.imageViewModel.getUndoList();
+        }
     }
 
     @Override
@@ -67,12 +73,7 @@ public class EditActivity extends AppCompatActivity {
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
-                try {
-                    bmp=MediaStore.Images.Media.getBitmap(this.getContentResolver(), result.getUri());
-                    undo.add(bmp);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                bmp=MainActivity.imageViewModel.getCroppedImage(result.getUri());
                 captureImage.setImageBitmap(bmp);
                 Toast.makeText(this, "Cropping successful, Sample: ", Toast.LENGTH_SHORT).show();
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
@@ -82,7 +83,9 @@ public class EditActivity extends AppCompatActivity {
     }
 
     public void crop(View view) {
-            cropImage(getImageUri(EditActivity.this,bmp));
+        cropImage(MainActivity.imageViewModel.getImageUri(bmp));
+        undo.add(bmp);
+        MainActivity.imageViewModel.addUndo(undo);
     }
 
    public void cropImage(Uri uri){
@@ -97,13 +100,6 @@ public class EditActivity extends AppCompatActivity {
         }
    }
 
-    public Uri getImageUri(Context inContext, Bitmap inImage) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
-        return Uri.parse(path);
-    }
-
     public void rotate(View view) {
         rotateImage();
     }
@@ -113,17 +109,18 @@ public class EditActivity extends AppCompatActivity {
             float degrees = 90;
             Matrix matrix = new Matrix();
             matrix.setRotate(degrees);
+            undo.add(bmp);
+            MainActivity.imageViewModel.addUndo(undo);
             bmp = Bitmap.createBitmap(bInput, 0, 0, bInput.getWidth(), bInput.getHeight(), matrix, true);
             EditActivity.this.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     captureImage.setImageBitmap(bmp);
-                    Log.i("Sizeeeebbb", String.valueOf(undo.size()));
-                    undo.add(bmp);
-                    Log.i("Sizeeeeaaa", String.valueOf(undo.size()));
+                    MainActivity.imageViewModel.UpdatedBitmap(bmp);
                 }
             });
         });
+
     }
 
     public void undo(View view) {
@@ -135,59 +132,26 @@ public class EditActivity extends AppCompatActivity {
         if (undo.size() > 0) {
             if (undo.size() > 1) {
                 lastPosition = undo.size() - 1;
-                undo.remove(lastPosition);
-                Log.i("last possssi bfrrreee", String.valueOf(lastPosition));
-                lastPosition = undo.size() - 1;
-                Log.i("last possssi aff", String.valueOf(lastPosition));
-                captureImage.setImageBitmap(undo.get(lastPosition));
-                bmp = undo.get(lastPosition);
             } else {
-                Log.i("in zerooo","ooo");
                 lastPosition = 0;
-                captureImage.setImageBitmap(undo.get(lastPosition));
-                bmp = undo.get(lastPosition);
-                undo.remove(lastPosition);
             }
+            captureImage.setImageBitmap(undo.get(lastPosition));
+            bmp = undo.get(lastPosition);
+            undo.remove(lastPosition);
+            MainActivity.imageViewModel.addUndo(undo);
         }
     }
 
     public void save(View view) {
         try {
-            bitmapToByteArray(bmp);
-            saveToGallery();
+            byteArray=MainActivity.imageViewModel.bitmapToByteArray(bmp);
+            MainActivity.imageViewModel.saveToGallery();
+            Toast.makeText(this, "Image Saved to Gallery!", Toast.LENGTH_SHORT).show();
+            Intent finalIntent=new Intent(getApplicationContext(),MainActivity.class);
+            startActivity(finalIntent);
+            finish();
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private void saveToGallery() throws IOException {
-        File file = new File(Environment.getExternalStorageDirectory()+"/"+ UUID.randomUUID().toString()+".jpg");
-        OutputStream outputStream = null;
-        try{
-            outputStream = new FileOutputStream(file);
-            outputStream.write(byteArray);
-            Toast.makeText(EditActivity.this, "Saved "+file, Toast.LENGTH_SHORT).show();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        finally {
-            if(outputStream != null)
-                outputStream.close();
-        }
-        addImageToGallery(file.getAbsolutePath(),EditActivity.this);
-    }
-
-    public void bitmapToByteArray(Bitmap bitmap){
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        byteArray= stream.toByteArray();
-    }
-
-    public static void addImageToGallery(final String filePath, final Context context) {
-        ContentValues values = new ContentValues();
-        values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
-        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-        values.put(MediaStore.MediaColumns.DATA, filePath);
-        context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
     }
 }
